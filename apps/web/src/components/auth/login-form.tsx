@@ -20,7 +20,10 @@ export function LoginForm() {
 
     try {
       const response = await login({ email, password });
-      persistSession(response.user);
+      persistSession(response.user, {
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      });
       router.push(`/${response.user.role}/dashboard`);
       router.refresh();
     } catch (submitError) {

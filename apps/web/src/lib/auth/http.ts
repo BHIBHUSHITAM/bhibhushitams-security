@@ -1,4 +1,4 @@
-import { clearSession } from "./session";
+import { clearSession, getAccessToken, getRefreshToken, persistTokens } from "./session";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
@@ -12,12 +12,21 @@ function redirectToLogin() {
 }
 
 async function tryRefreshToken() {
+  const refreshToken = getRefreshToken();
   const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({}),
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
   });
+
+  if (response.ok) {
+    const body = (await response.json()) as { accessToken?: string; refreshToken?: string };
+    persistTokens({
+      accessToken: body.accessToken,
+      refreshToken: body.refreshToken,
+    });
+  }
 
   return response.ok;
 }
@@ -33,6 +42,14 @@ export async function authFetch(
     credentials: "include",
     ...init,
   };
+
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    requestInit.headers = {
+      ...(init?.headers ?? {}),
+      Authorization: `Bearer ${accessToken}`,
+    };
+  }
 
   const response = await fetch(input, requestInit);
   if (response.status !== 401 || !retryOnUnauthorized) {

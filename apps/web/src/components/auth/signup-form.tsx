@@ -22,7 +22,10 @@ export function SignupForm() {
 
     try {
       const response = await signup({ name, email, password, role });
-      persistSession(response.user);
+      persistSession(response.user, {
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      });
       router.push(`/${response.user.role}/dashboard`);
       router.refresh();
     } catch (submitError) {
