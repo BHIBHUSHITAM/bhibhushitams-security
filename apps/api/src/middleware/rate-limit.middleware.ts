@@ -10,6 +10,20 @@ export interface RateLimitOptions {
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Maximum number of requests per window
   message?: string;
+  keyGenerator?: (req: Request) => string;
+}
+
+function getClientIp(req: Request): string {
+  const forwardedFor = req.headers["x-forwarded-for"];
+
+  if (typeof forwardedFor === "string" && forwardedFor.length > 0) {
+    const firstIp = forwardedFor.split(",")[0]?.trim();
+    if (firstIp) {
+      return firstIp;
+    }
+  }
+
+  return req.ip || req.socket.remoteAddress || "unknown";
 }
 
 /**
@@ -17,11 +31,10 @@ export interface RateLimitOptions {
  * For production, use redis-based rate limiting (e.g., express-rate-limit with Redis)
  */
 export function rateLimit(options: RateLimitOptions) {
-  const { windowMs, maxRequests, message = "Too many requests, please try again later" } = options;
+  const { windowMs, maxRequests, message = "Too many requests, please try again later", keyGenerator } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
-    // Use IP address as key (in production, consider using user ID for authenticated requests)
-    const key = req.ip || req.socket.remoteAddress || "unknown";
+    const key = keyGenerator ? keyGenerator(req) : getClientIp(req);
     const now = Date.now();
 
     // Initialize or reset if window has passed

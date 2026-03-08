@@ -13,6 +13,7 @@ function getEnv(name: string, fallback?: string): string {
 export const env = {
   nodeEnv: getEnv("NODE_ENV", "development"),
   port: Number(getEnv("PORT", "5000")),
+  trustProxy: getEnv("TRUST_PROXY", "1"),
   mongodbUri: getEnv("MONGODB_URI"),
   jwtAccessSecret: getEnv("JWT_ACCESS_SECRET"),
   jwtRefreshSecret: getEnv("JWT_REFRESH_SECRET"),

@@ -17,6 +17,17 @@ import { userRouter } from "./modules/users/user.routes";
 
 export const app = express();
 
+const trustProxyValue = env.trustProxy.toLowerCase();
+const trustProxy =
+  trustProxyValue === "true"
+    ? true
+    : trustProxyValue === "false"
+      ? false
+      : /^\d+$/.test(env.trustProxy)
+        ? Number(env.trustProxy)
+        : env.trustProxy;
+app.set("trust proxy", trustProxy);
+
 const allowedOrigins = env.corsOrigin
   .split(",")
   .map((origin) => origin.trim())
